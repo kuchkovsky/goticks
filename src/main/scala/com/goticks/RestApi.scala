@@ -3,14 +3,12 @@ package com.goticks
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
 import akka.actor._
 import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.util.Timeout
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 
@@ -18,7 +16,20 @@ trait RestApi extends BoxOfficeApi
     with EventMarshalling {
   import StatusCodes._
 
-  def routes: Route = eventsRoute ~ eventRoute ~ ticketsRoute
+  def routes: Route = helloRoute ~ eventsRoute ~ eventRoute ~ ticketsRoute
+
+  def helloRoute =
+    pathPrefix("hello") {
+      pathEndOrSingleSlash {
+        get {
+          val hostname = java.net.InetAddress.getLocalHost.getHostName
+          val html =
+            s"""<h3>Hello from GoTicks!</h3>
+               |<b>Hostname:</b> $hostname""".stripMargin
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, html))
+        }
+      }
+    }
 
   def eventsRoute =
     pathPrefix("events") {
